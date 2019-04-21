@@ -16,7 +16,7 @@ Column {data-width=350}
 -----------------------------------------------------------------------
 ### Setting up
 
-Before running the code, you need to go to Session -- Set Working Directory -- To Source File Location.
+Before running the code, please go to Session -- Set Working Directory -- To Source File Location.
 
 First we will load libraries to deal with sqlite. Here we will use RSQLite (to establish the connection), DBI and dbplyr (to execute SQL query), dplyr (to connect tables within the database), DT (to display datatable in an interactive format) and flexdashboard (to build the dashboard page for the report).
 
@@ -65,8 +65,8 @@ Row {data-height=550 .tabset}
 
 
 ```{r}
+#Displaying people table
 datatable(as.data.frame(tbl(testdb,sql("SELECT * FROM people")))) 
-
 ```
 
 
@@ -91,7 +91,7 @@ datatable(as.data.frame(tbl(testdb,sql("SELECT * FROM sqlite_sequence"))))
 Column {.tabset.data-width=200}
 -----------------------------------------------------------------------
 
-### Removing duplicates
+### Checking duplicates
 
 From the sqlite_sequence table we know that there are 30 people and 100 sites. We also know the id for the person and id for the sites. First we need to check if there are duplicates in the dataset.
 
@@ -113,15 +113,17 @@ Column {}
 
 ### Making Adjustments
 
-We can see the sites table does not contain duplicates, but the people table contains duplicates. Alena Jacobson has two personids. We need to find the id of this person and change his/her another personid to the same number.
+We can see the sites table does not contain duplicates, but the people table contains duplicates. Alena Jacobson has two personids. We need to find the id of this person and change her another personid to the same number.
 
 ```{r}
+#finding Alena Jacobson's personid
 tbl(testdb,sql("SELECT id FROM people WHERE first_name = 'Alena' AND last_name = 'Jacobson'"))
 ```
 
 Before changing this person's id, we need to join the people table and visits table. This will enable us to change that person's id more efficiently. After joining the table, we change Alena Jacobson's personid to 30.
 
 ```{r echo=TRUE}
+#join people table and visits table
 new_df <- as.data.frame(tbl(testdb,sql("SELECT id, first_name,last_name, siteId FROM people JOIN visits ON people.id = visits.personId")))
 #change the id of Alena Jacobson to 30
 new_df <- new_df %>% mutate(id=replace(id,first_name=="Alena"&last_name=="Jacobson",30))
@@ -130,19 +132,20 @@ new_df <- new_df %>% mutate(id=replace(id,first_name=="Alena"&last_name=="Jacobs
 Then to find the ten people who have visited the most sites, we need to count the sites grouped by personId to get the number of times a person visit sites. Then we need to order them in descending order and get the first 10 people's records.
 
 ```{r echo=TRUE}
-#calculate the 10 people who visited most sites
+#finding the 10 people who visited most sites
 freq_browser <- new_df %>% group_by(id) %>% summarize(count=n_distinct(siteId))%>%arrange(desc(count))%>%slice(c(1:10))
 
 colnames(freq_browser) <- c('person_id', 'num_sites_visited')
 ```
 
 ```{r eval=FALSE}
+#write data into frequent_browsers table
 dbWriteTable(testdb,"frequent_browsers",freq_browser,append=TRUE)
 ```
 
 
 After extracting the data, I saved them into the frequent_browsers table. 
-And following is the table.
+And following is the table and the names of 10 people who have visited most sites.
 
 
 Column {}
