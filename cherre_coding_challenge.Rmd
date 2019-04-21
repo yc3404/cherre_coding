@@ -4,6 +4,7 @@ output:
   flexdashboard::flex_dashboard:
     orientation: rows
     vertical_layout: scroll
+    theme: journal
     
 ---
 
@@ -57,10 +58,11 @@ Here are the columns included in each table:
 + sqlite_sequence: name, seq
 
 
-Column {.tabset}
+Row {data-height=550 .tabset}
 -----------------------------------------------------------------------
 
 ### Table. people
+
 
 ```{r}
 datatable(as.data.frame(tbl(testdb,sql("SELECT * FROM people")))) 
@@ -97,13 +99,13 @@ From the sqlite_sequence table we know that there are 30 people and 100 sites. W
 ### Checking duplicates in sites table
 
 ```{r}
-datatable(as.data.frame(tbl(testdb,sql("SELECT id, count(*) from sites group by id having count(*) > 1"))))
+datatable(as.data.frame(tbl(testdb,sql("SELECT url, count(*) from sites group by id having count(*) > 1"))))
 ```
 
 ### Checking duplicates in people table
 
 ```{r}
-datatable(as.data.frame(tbl(testdb,sql("SELECT id, count(*) from people group by first_name,last_name having count(*) > 1"))))
+datatable(as.data.frame(tbl(testdb,sql("SELECT first_name, last_name, count(*) from people group by first_name,last_name having count(*) > 1"))))
 ```
 
 Column {}
@@ -111,10 +113,10 @@ Column {}
 
 ### Making Adjustments
 
-We can see the sites table does not contain duplicates, but the people table contains duplicates. The person with personid 30 has two personids. We need to find the name of this person and change his/her another personid to 30.
+We can see the sites table does not contain duplicates, but the people table contains duplicates. Alena Jacobson has two personids. We need to find the id of this person and change his/her another personid to the same number.
 
 ```{r}
-tbl(testdb,sql("SELECT first_name,last_name FROM people WHERE id=30"))
+tbl(testdb,sql("SELECT id FROM people WHERE first_name = 'Alena' AND last_name = 'Jacobson'"))
 ```
 
 Before changing this person's id, we need to join the people table and visits table. This will enable us to change that person's id more efficiently. After joining the table, we change Alena Jacobson's personid to 30.
